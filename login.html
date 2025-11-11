@@ -25,8 +25,17 @@
     <section class="login-section">
         <div class="login-container">
             <div class="login-box">
-                <h1>Login</h1>
+                <h1>🔐 Login</h1>
                 <p class="login-subtitle">Welcome back! Please login to your account</p>
+                
+                <!-- Demo Credentials Info -->
+                <div class="demo-info">
+                    <p><strong>Demo Credentials:</strong></p>
+                    <ul>
+                        <li>Email: <code>user@example.com</code> | Password: <code>password123</code></li>
+                        <li>Email: <code>admin@example.com</code> | Password: <code>admin123</code></li>
+                    </ul>
+                </div>
                 
                 <form id="loginForm" class="login-form" onsubmit="handleLogin(event)">
                     <div class="form-group">
@@ -35,7 +44,7 @@
                             type="email" 
                             id="email" 
                             name="email" 
-                            placeholder="Enter your email" 
+                            placeholder="e.g., user@example.com" 
                             required
                         >
                         <span class="error-message" id="emailError"></span>
@@ -43,13 +52,18 @@
 
                     <div class="form-group">
                         <label for="password">Password</label>
-                        <input 
-                            type="password" 
-                            id="password" 
-                            name="password" 
-                            placeholder="Enter your password" 
-                            required
-                        >
+                        <div class="password-input-group">
+                            <input 
+                                type="password" 
+                                id="password" 
+                                name="password" 
+                                placeholder="e.g., password123" 
+                                required
+                            >
+                            <button type="button" class="password-toggle" onclick="togglePasswordVisibility()" title="Show/Hide Password">
+                                <span id="toggleIcon">👁️</span>
+                            </button>
+                        </div>
                         <span class="error-message" id="passwordError"></span>
                     </div>
 
@@ -66,15 +80,20 @@
                 </form>
 
                 <div class="login-footer">
-                    <p>Don't have an account? <a href="#">Sign up here</a></p>
-                    <p><a href="#">Forgot your password?</a></p>
+                    <p>Don't have an account? <a href="index.html">Back to Home</a></p>
+                    <p><a href="index.html#contact">Need help? Contact us</a></p>
                 </div>
             </div>
 
             <div class="login-image">
                 <div class="placeholder-image">
-                    <h2>Welcome</h2>
+                    <h2>🎯 Welcome Back</h2>
                     <p>Sign in to access your personalized dashboard</p>
+                    <div class="features-list">
+                        <div class="feature-item">✓ Secure Authentication</div>
+                        <div class="feature-item">✓ Fast Access</div>
+                        <div class="feature-item">✓ Personalized Experience</div>
+                    </div>
                 </div>
             </div>
         </div>
