@@ -1,0 +1,25 @@
+# Ignore Git metadata
+.git
+
+# Editor / OS files
+.vscode
+*.swp
+*.swo
+Thumbs.db
+desktop.ini
+
+# Local dev / infra files we don't want in the image
+terraform/
+kubernetes/
+README.md
+*.md
+
+# Node / Python / build artifacts (if any)
+node_modules/
+dist/
+build/
+
+# Secrets / local credentials
+*.pem
+*.key
+*.env
