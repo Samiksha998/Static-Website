@@ -1,3 +1,13 @@
+document.addEventListener('DOMContentLoaded', function(){
+    const cta = document.getElementById('cta');
+    if(cta){
+        cta.addEventListener('click', function(e){
+            e.preventDefault();
+            alert('Hello — this is a minimal static site!');
+        });
+    }
+});
+
 // Smooth scroll to section
 function scrollToSection(sectionId) {
     const element = document.getElementById(sectionId);

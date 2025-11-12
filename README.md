@@ -1,33 +1,54 @@
-# Static Website
+# Static Website — Minimal Edition
 
-A simple, modern, and responsive static website built with HTML, CSS, and JavaScript.
+A simple static website built with HTML, CSS, and JavaScript.
 
-## 📋 Table of Contents
+## Features
 
-- [Features](#features)
-- [Project Structure](#project-structure)
-- [Getting Started](#getting-started)
-- [Usage](#usage)
-- [Customization](#customization)
-- [Technologies Used](#technologies-used)
-- [Browser Support](#browser-support)
-- [License](#license)
+- Minimal and clean design
+- Single-page HTML, CSS, JS
+- Dockerfile ready for containerization on port 80
+- Simple to customize and deploy
 
-## ✨ Features
-
-- **Responsive Design** - Fully responsive layout that works on all devices (desktop, tablet, mobile)
-- **Modern Styling** - Clean and professional design with smooth animations
-- **Smooth Navigation** - Sticky navbar with smooth scrolling between sections
-- **Interactive Elements** - Form validation and dynamic interactions with JavaScript
-- **Performance Optimized** - Fast loading times and efficient code
-- **Easy to Customize** - Simple structure for quick modifications
-- **Cross-browser Compatible** - Works on all modern browsers
-
-## 📁 Project Structure
+## Project Structure
 
 ```
 Static-Website/
-├── index.html          # Main HTML file with page structure
+├── index.html          # Main HTML file
+├── css/
+│   └── style.css       # Stylesheet
+├── js/
+│   └── script.js       # JavaScript interactions
+├── Dockerfile          # Docker image definition
+└── README.md           # This file
+```
+
+## Getting Started
+
+1. Open `index.html` in a browser to view the site locally.
+
+### Docker
+
+Build and run the site in a Docker container:
+
+```bash
+docker build -t my-site .
+docker run -p 8080:80 my-site
+```
+
+Then visit `http://localhost:8080`.
+
+## Customization
+
+- Edit `index.html` to change content and structure.
+- Edit `css/style.css` to modify styling.
+- Edit `js/script.js` to add interactivity.
+
+## Technologies
+
+- HTML5
+- CSS3
+- JavaScript (ES6+)
+- Docker (optional containerization)
 ├── css/
 │   └── style.css       # All CSS styling and responsive design
 ├── js/
