@@ -1,11 +1,9 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: static-website-app # app-deploy.yaml removed — repository simplified to a single static site
-  namespace: default
+  name: static-website-app
   labels:
     app: static-website
-    version: v1
 spec:
   replicas: 2
   strategy:
@@ -20,17 +18,14 @@ spec:
     metadata:
       labels:
         app: static-website
-        version: v1
-      annotations:
-        description: "Deployed via Terraform and Kubernetes"
     spec:
       containers:
-      - name: static-website
-        image: samikshav/app:v1
+      - name: web
+        image: samikshav/static-website:latest
         imagePullPolicy: IfNotPresent
         ports:
         - name: http
-          containerPort: 8080
+          containerPort: 80
           protocol: TCP
         
         # Resource requests and limits
@@ -62,14 +57,10 @@ spec:
           timeoutSeconds: 3
           failureThreshold: 3
         
-        # Environment variables (optional)
+        # Environment variables
         env:
         - name: APP_ENV
           value: "kubernetes"
-        - name: APP_NAME
-          value: "Static Website"
-        - name: APP_VERSION
-          value: "v1"
       
       # Pod restart policy
       restartPolicy: Always
@@ -90,4 +81,3 @@ spec:
                   values:
                   - static-website
               topologyKey: kubernetes.io/hostname
-# Original Kubernetes manifests were removed to keep the workspace minimal.
