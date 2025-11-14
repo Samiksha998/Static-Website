@@ -3,7 +3,6 @@ pipeline {
 
     environment {
         KUBECONFIG = "/var/lib/jenkins/.kube/config"
-"
         IMAGE_NAME = "samikshav/static-website:latest"
         K8S_DIR = "kubernetes"
     }
