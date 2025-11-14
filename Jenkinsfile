@@ -46,8 +46,8 @@ pipeline {
                     sh '''
                     echo "=== Applying Kubernetes Manifests ==="
 
-                    kubectl apply -f $K8S_DIR/app-deploy.yaml
-                    kubectl apply -f $K8S_DIR/app-service.yaml
+                    kubectl apply -f $K8S_DIR/app-deploy.yaml --validate=false
+                    kubectl apply -f $K8S_DIR/app-service.yaml --validate=false
 
                     kubectl set image deployment/static-website-deployment \
                         static-website=$IMAGE_NAME --namespace=default || true
