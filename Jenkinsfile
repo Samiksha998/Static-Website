@@ -46,7 +46,7 @@ pipeline {
                     sh '''
                     echo "=== Applying Kubernetes Manifests ==="
 
-                    kubectl apply -f $K8S_DIR/app-deployment.yaml
+                    kubectl apply -f $K8S_DIR/app-deploy.yaml
                     kubectl apply -f $K8S_DIR/app-service.yaml
 
                     kubectl set image deployment/static-website-deployment \
@@ -64,11 +64,11 @@ pipeline {
                     sh '''
                     echo "=== Killing Old Port-Forward (if any) ==="
                     kill -9 $(lsof -t -i:9090) 2>/dev/null || true
-                    
+                     
                     echo "=== Starting New Port Forward on 9090 ==="
                     nohup kubectl port-forward svc/static-website-service 9090:80 --address=0.0.0.0 \
                         > port-forward.log 2>&1 &
-                    
+
                     echo "Application live at: http://<EC2-PUBLIC-IP>:9090"
                     '''
                 }
