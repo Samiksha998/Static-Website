@@ -46,11 +46,11 @@ pipeline {
                     sh '''
                     echo "=== Applying Kubernetes Manifests ==="
 
-                    kubectl apply -f $K8S_DIR/app-deploy.yaml --validate=false
-                    kubectl apply -f $K8S_DIR/app-service.yaml --validate=false
+                    kubectl apply -f $K8S_DIR/app-deploy.yaml --insecure-skip-tls-verify
+                    kubectl apply -f $K8S_DIR/app-service.yaml --insecure-skip-tls-verify
 
                     kubectl set image deployment/static-website-deployment \
-                        static-website=$IMAGE_NAME --namespace=default || true
+                        static-website=$IMAGE_NAME --namespace=default --insecure-skip-tls-verify
 
                     kubectl rollout status deployment/static-website-deployment -n default
                     '''
