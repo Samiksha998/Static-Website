@@ -45,14 +45,15 @@ pipeline {
                 script {
                     sh '''
                     echo "=== Applying Kubernetes Manifests ==="
-
-                    kubectl apply -f $K8S_DIR/app-deploy.yaml --insecure-skip-tls-verify
+                    kubectl apply -f $K8S_DIR/app-deployment.yaml --insecure-skip-tls-verify
                     kubectl apply -f $K8S_DIR/app-service.yaml --insecure-skip-tls-verify
 
-                    kubectl set image deployment/static-website-deployment \
-                        static-website=$IMAGE_NAME --namespace=default --insecure-skip-tls-verify
+                    echo "=== Updating Deployment Image ==="
+                    kubectl set image deployment/static-website-app \
+                    web=$IMAGE_NAME --namespace=default --insecure-skip-tls-verify
 
-                    kubectl rollout status deployment/static-website-deployment -n default
+                    echo "=== Waiting for Rollout ==="
+                    kubectl rollout status deployment/static-website-app -n default --insecure-skip-tls-verify
                     '''
                 }
             }
