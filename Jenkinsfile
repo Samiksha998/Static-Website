@@ -4,7 +4,6 @@ pipeline {
     environment {
         KUBECONFIG = "/var/lib/jenkins/.kube/config"
         IMAGE_NAME = "samikshav/static-website:latest"
-        K8S_DIR = "kubernetes"
     }
 
     stages {
@@ -27,7 +26,7 @@ pipeline {
                         echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
 
                         echo "=== Building Docker Image ==="
-                        docker build -t $IMAGE_NAME .
+                        docker build -t $IMAGE_NAME $WORKSPACE
 
                         echo "=== Pushing Image ==="
                         docker push $IMAGE_NAME
@@ -44,13 +43,16 @@ pipeline {
             steps {
                 script {
                     sh '''
+                    echo "=== Listing Workspace Structure ==="
+                    ls -R $WORKSPACE
+
                     echo "=== Applying Kubernetes Manifests ==="
-                    kubectl apply -f $K8S_DIR/app-deployment.yaml --insecure-skip-tls-verify
-                    kubectl apply -f $K8S_DIR/app-service.yaml --insecure-skip-tls-verify
+                    kubectl apply -f $WORKSPACE/kubernetes/app-deploy.yaml --insecure-skip-tls-verify
+                    kubectl apply -f $WORKSPACE/kubernetes/app-service.yaml --insecure-skip-tls-verify
 
                     echo "=== Updating Deployment Image ==="
                     kubectl set image deployment/static-website-app \
-                    web=$IMAGE_NAME --namespace=default --insecure-skip-tls-verify
+                        web=$IMAGE_NAME --namespace=default --insecure-skip-tls-verify
 
                     echo "=== Waiting for Rollout ==="
                     kubectl rollout status deployment/static-website-app -n default --insecure-skip-tls-verify
@@ -68,7 +70,7 @@ pipeline {
                      
                     echo "=== Starting New Port Forward on 9090 ==="
                     nohup kubectl port-forward svc/static-website-service 9090:80 --address=0.0.0.0 \
-                        > port-forward.log 2>&1 &
+                        > $WORKSPACE/port-forward.log 2>&1 &
 
                     echo "Application live at: http://<EC2-PUBLIC-IP>:9090"
                     '''
