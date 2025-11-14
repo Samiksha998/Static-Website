@@ -2,7 +2,8 @@ pipeline {
     agent any
 
     environment {
-        KUBECONFIG = "/home/ec2-user/.kube/config"
+        KUBECONFIG = "/var/lib/jenkins/.kube/config"
+"
         IMAGE_NAME = "samikshav/static-website:latest"
         K8S_DIR = "kubernetes"
     }
