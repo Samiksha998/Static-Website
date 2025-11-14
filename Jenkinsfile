@@ -1,9 +1,10 @@
-pipeline {
+pipeline { 
     agent any
 
     environment {
         KUBECONFIG = "/home/ec2-user/.kube/config"
         IMAGE_NAME = "samikshav/static-website:latest"
+        K8S_DIR = "kubernetes"
     }
 
     stages {
@@ -20,7 +21,7 @@ pipeline {
                     sh '''
                     echo "=== Building and Pushing Docker Image ==="
 
-                    # Build Docker image
+                    # Build image
                     echo 'admin' | sudo -S docker build -t $IMAGE_NAME .
 
                     # Push to Docker Hub
@@ -34,16 +35,19 @@ pipeline {
             steps {
                 script {
                     sh '''
-                    echo "=== Deploying Application to Kubernetes ==="
+                    echo "=== Deploying Kubernetes Manifests ==="
 
-                    # Apply deployment & service YAMLs
-                    echo 'admin' | sudo -S kubectl apply -f kubernetes/
+                    # Apply each manifest file
+                    echo 'admin' | sudo -S kubectl apply -f $K8S_DIR/app-deployment.yaml
+                    echo 'admin' | sudo -S kubectl apply -f $K8S_DIR/app-service.yaml
 
-                    # Update deployment image
+                    echo "=== Updating Deployment Image ==="
+
+                    # Update deployment with latest image
                     echo 'admin' | sudo -S kubectl set image deployment/static-website-deployment \
-                        static-website=$IMAGE_NAME -n default || true
+                        static-website=$IMAGE_NAME --namespace=default || true
 
-                    # Wait for deployment rollout
+                    # Rollout status
                     echo 'admin' | sudo -S kubectl rollout status deployment/static-website-deployment -n default
                     '''
                 }
@@ -54,16 +58,16 @@ pipeline {
             steps {
                 script {
                     sh '''
-                    echo "=== Starting Kubernetes Port Forwarding ==="
+                    echo "=== Handling Port Forward ==="
 
-                    # Kill any existing port-forward on 9090
+                    # Stop existing port-forward on 9090
                     sudo kill -9 $(sudo lsof -t -i:9090) 2>/dev/null || true
 
-                    # Start port forwarding in background
+                    echo "=== Starting New Port Forward ==="
                     nohup sh -c "echo 'admin' | sudo -S kubectl port-forward svc/static-website-service 9090:80 --address=0.0.0.0" \
                         > port-forward.log 2>&1 &
 
-                    echo "Website accessible at: http://<your-ec2-public-ip>:9090"
+                    echo "Static website: http://<EC2-PUBLIC-IP>:9090"
                     '''
                 }
             }
@@ -72,13 +76,13 @@ pipeline {
 
     post {
         success {
-            echo "✅ Static Website successfully deployed and accessible at port 9090!"
+            echo "✅ Deployment successful! Access at port 9090."
         }
         failure {
-            echo "❌ Deployment or port-forwarding failed. Check Jenkins logs."
+            echo "❌ Deployment failed. Check console output."
         }
         always {
-            echo "🏁 Pipeline completed."
+            echo "🏁 Pipeline finished."
         }
     }
 }
