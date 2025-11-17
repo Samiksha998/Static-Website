@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     environment {
-        KUBECONFIG = "/home/ec2-user/.kube/config"
+        KUBECONFIG = "/var/lib/jenkins/.kube/config"
         IMAGE_NAME = "samikshav/static-website:latest"
     }
 
@@ -28,7 +28,7 @@ pipeline {
                         echo "=== Building Docker Image ==="
                         docker build -t $IMAGE_NAME $WORKSPACE
 
-                        echo "=== Pushing Image ==="
+                        echo "=== Pushing Image to Docker Hub ==="
                         docker push $IMAGE_NAME
 
                         echo "=== Docker Logout ==="
@@ -39,23 +39,39 @@ pipeline {
             }
         }
 
+        stage('Setup kubeconfig for Jenkins') {
+            steps {
+                script {
+                    sh '''
+                    echo "=== Copying kubeconfig for Jenkins user ==="
+                    mkdir -p /var/lib/jenkins/.kube
+
+                    # Copy only if not already present
+                    cp -f /home/ec2-user/.kube/config /var/lib/jenkins/.kube/config || true
+
+                    chown -R jenkins:jenkins /var/lib/jenkins/.kube
+
+                    echo "=== Verifying EKS connectivity ==="
+                    kubectl get nodes --kubeconfig=$KUBECONFIG
+                    '''
+                }
+            }
+        }
+
         stage('Deploy to Kubernetes') {
             steps {
                 script {
                     sh '''
-                    echo "=== Listing Workspace Structure ==="
-                    ls -R $WORKSPACE
-
                     echo "=== Applying Kubernetes Manifests ==="
-                    kubectl apply -f $WORKSPACE/kubernetes/app-deploy.yaml --insecure-skip-tls-verify
-                    kubectl apply -f $WORKSPACE/kubernetes/app-service.yaml --insecure-skip-tls-verify
+                    kubectl apply -f $WORKSPACE/kubernetes/app-deploy.yaml --kubeconfig=$KUBECONFIG
+                    kubectl apply -f $WORKSPACE/kubernetes/app-service.yaml --kubeconfig=$KUBECONFIG
 
                     echo "=== Updating Deployment Image ==="
                     kubectl set image deployment/static-website-app \
-                        web=$IMAGE_NAME --namespace=default --insecure-skip-tls-verify
+                        web=$IMAGE_NAME --namespace=default --kubeconfig=$KUBECONFIG
 
-                    echo "=== Waiting for Rollout ==="
-                    kubectl rollout status deployment/static-website-app -n default --insecure-skip-tls-verify
+                    echo "=== Waiting for Deployment Rollout ==="
+                    kubectl rollout status deployment/static-website-app -n default --kubeconfig=$KUBECONFIG
                     '''
                 }
             }
@@ -65,14 +81,15 @@ pipeline {
             steps {
                 script {
                     sh '''
-                    echo "=== Killing Old Port-Forward (if any) ==="
+                    echo "=== Killing Existing Port Forward (if any) ==="
                     kill -9 $(lsof -t -i:9090) 2>/dev/null || true
-                     
-                    echo "=== Starting New Port Forward on 9090 ==="
-                    nohup kubectl port-forward svc/static-website-service 9090:80 --address=0.0.0.0 \
+
+                    echo "=== Starting New Port Forward on Port 9090 ==="
+                    nohup kubectl port-forward svc/static-website-service 9090:80 \
+                        --address=0.0.0.0 --kubeconfig=$KUBECONFIG \
                         > $WORKSPACE/port-forward.log 2>&1 &
 
-                    echo "Application live at: http://<EC2-PUBLIC-IP>:9090"
+                    echo "Application available at: http://<EC2-PUBLIC-IP>:9090"
                     '''
                 }
             }
@@ -81,13 +98,13 @@ pipeline {
 
     post {
         success {
-            echo "✅ Deployment successful! Access at port 9090."
+            echo "✅ Deployment successful! Access app at port 9090."
         }
         failure {
-            echo "❌ Deployment failed. Check console output."
+            echo "❌ Deployment failed. Check Jenkins logs."
         }
         always {
-            echo "🏁 Pipeline finished."
+            echo "🏁 Pipeline completed."
         }
     }
 }
