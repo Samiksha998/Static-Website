@@ -5,7 +5,7 @@ metadata:
   labels:
     app: static-website
 spec:
-  type: NodePort
+  type: LoadBalancer
   selector:
     app: static-website
   ports:
@@ -13,5 +13,4 @@ spec:
     port: 80
     targetPort: 80
     protocol: TCP
-    nodePort: 30080
   sessionAffinity: None
