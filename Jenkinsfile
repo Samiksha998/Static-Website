@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     environment {
-        KUBECONFIG = "/var/lib/jenkins/.kube/config"
+        KUBECONFIG = "/home/ec2-user/.kube/config"
         IMAGE_NAME = "samikshav/static-website:latest"
     }
 
