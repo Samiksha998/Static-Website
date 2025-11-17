@@ -56,9 +56,6 @@ pipeline {
                         credentialsId: 'aws-creds']]) {
 
                         sh '''
-                        echo "=== Ensuring Jenkins .kube Directory ==="
-                        mkdir -p /var/lib/jenkins/.kube
-
                         echo "=== Updating kubeconfig from EKS ==="
                         aws eks update-kubeconfig \
                             --region $AWS_REGION \
@@ -101,39 +98,40 @@ pipeline {
         }
 
         /* ----------------------------
-           5. PORT FORWARDING
+           5. DELETE LOAD BALANCER (NEW)
         ----------------------------- */
-        stage('Port Forwarding') {
+        stage('Delete Load Balancer') {
             steps {
                 script {
-                    sh '''
-                    echo "=== Killing Old Port Forward ==="
-                    kill -9 $(lsof -t -i:9090) 2>/dev/null || true
+                    withCredentials([[$class: 'AmazonWebServicesCredentialsBinding',
+                        credentialsId: 'aws-creds']]) {
 
-                    echo "=== Starting Port Forward on 9090 ==="
-                    nohup kubectl port-forward svc/static-website-service 9090:80 \
-                        --address=0.0.0.0 --kubeconfig=$KUBECONFIG \
-                        > $WORKSPACE/port-forward.log 2>&1 &
+                        sh '''
+                        echo "=== Fetching LoadBalancer Info ==="
+                        LB_ARN=$(aws elbv2 describe-load-balancers \
+                            --region $AWS_REGION \
+                            --query "LoadBalancers[?starts_with(DNSName, 'a')].LoadBalancerArn" \
+                            --output text)
 
-                    echo "App Live: http://<EC2-PUBLIC-IP>:9090"
-                    '''
-                }
-            }
-        }
-    }
+                        echo "Found LB ARN: $LB_ARN"
 
-    /* ----------------------------
-       6. POST BUILD ACTIONS
-    ----------------------------- */
-    post {
-        success {
-            echo "✅ Deployment successful! App: http://<EC2-PUBLIC-IP>:9090"
-        }
-        failure {
-            echo "❌ Deployment failed. Check Jenkins pipeline logs."
-        }
-        always {
-            echo "🏁 Pipeline completed."
-        }
-    }
-}
+                        if [ "$LB_ARN" != "None" ] && [ -n "$LB_ARN" ]; then
+                            echo "=== Deleting Kubernetes Service ==="
+                            kubectl delete svc static-website-service --kubeconfig=$KUBECONFIG || true
+
+                            echo "=== Deleting AWS Load Balancer ==="
+                            aws elbv2 delete-load-balancer \
+                                --load-balancer-arn $LB_ARN \
+                                --region $AWS_REGION
+
+                            echo "Waiting for LB deletion..."
+                            sleep 40
+
+                            echo "=== Deleting Target Groups ==="
+                            TG_ARNS=$(aws elbv2 describe-target-groups \
+                                --region $AWS_REGION \
+                                --query "TargetGroups[*].TargetGroupArn" --output text)
+
+                            for TG in $TG_ARNS; do
+                                echo "Deleting Target Group: $TG"
+                                aws elbv2 delete
